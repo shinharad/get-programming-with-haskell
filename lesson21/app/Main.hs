@@ -2,5 +2,13 @@ module Main where
 
 import Lib
 
+helloPerson :: String -> String
+helloPerson name = "Hello" ++ " " ++ name ++ "!"
+
 main :: IO ()
-main = someFunc
+main = do
+  putStrLn "Hello! What's your name?"
+  name <- getLine
+  let statement = helloPerson name
+  putStrLn statement
+
