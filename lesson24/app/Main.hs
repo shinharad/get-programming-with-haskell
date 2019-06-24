@@ -81,7 +81,7 @@ getCounts' input = (charCount, wordCount, lineCount)
        lineCount = (length . T.lines) input
 
 countsText' :: (Int,Int,Int) -> T.Text
-countsText' (cc,wc,lc) = T.pack (unwords ["chars: "
+countsText' (cc, wc, lc) = T.pack (unwords ["chars: "
                                    , show cc
                                    , " words: "
                                    , show wc
