@@ -2,11 +2,6 @@ module Main where
 
 import qualified Data.Map as Map
 
-import           Lib
-
-main :: IO ()
-main = someFunc
-
 -- THE LIMITATIONS OF APPLICATIVE AND FUNCTOR
 type UserName = String
 
@@ -52,6 +47,24 @@ creditsFromId :: GamerId -> Maybe PlayerCredits
 creditsFromId id = altLookupCredits (lookupUserName id)
 
 -- MaybeはJust、Nothingしかないので何とかなるが...
+-- THE BIND OPERATOR: >>=
+type WillCoId = Int
 
--- 30.2. THE BIND OPERATOR: >>=
+gamerIdDB :: Map.Map WillCoId GamerId
+gamerIdDB = Map.fromList [(1001, 1), (1002, 2), (1003, 3), (1004, 4), (1005, 5), (1006, 6)]
 
+lookupGamerId :: WillCoId -> Maybe GamerId
+lookupGamerId id = Map.lookup id gamerIdDB
+
+creditsFromWCId :: WillCoId -> Maybe PlayerCredits
+creditsFromWCId id = lookupGamerId id >>= lookupUserName >>= lookupCredits
+
+-- Using >>= to create your echo function
+echo :: IO ()
+echo = getLine >>= putStrLn
+
+main :: IO ()
+main = echo
+
+
+-- 30.3. THE MONAD TYPE CLASS
