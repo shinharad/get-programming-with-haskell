@@ -66,5 +66,30 @@ echo = getLine >>= putStrLn
 main :: IO ()
 main = echo
 
+-- THE MONAD TYPE CLASS
+echoVerbose :: IO ()
+echoVerbose = putStrLn "Enter a String an we'll echo it!" >> getLine >>= putStrLn
 
--- 30.3. THE MONAD TYPE CLASS
+main' :: IO ()
+main' = echoVerbose
+
+
+-- Using Monad to build a Hello <Name> program
+-- (askForName >> getLine)
+askForName :: IO ()
+askForName = putStrLn "What is your name?"
+
+nameStatement :: String -> String
+nameStatement name = "Hello, " ++ name ++ "!"
+
+helloName :: IO ()
+helloName = askForName >>
+            getLine >>=
+            (\name -> return (nameStatement name)) >>=
+            putStrLn
+
+
+
+
+
+
