@@ -1,5 +1,6 @@
 module Main where
 
+import           Control.Applicative
 import           Control.Monad
 import           Lib
 
@@ -60,7 +61,7 @@ students =
 -- GHCi> _select (\x -> (studentName x, gradeLevel x)) students
 -- [(Audre Lorde,Senior),(Leslie Silko,Junior),(Judith Butler,Freshman),(Guy Debord,Senior),(Jean Baudrillard,Sophmore),(Julia Kristeva,Junior)]
 --
-_select :: (a -> b) -> [a] -> [b]
+_select :: Monad m => (a -> b) -> m a -> m b
 _select prop vals = do
   val <- vals
   return (prop val)
@@ -70,7 +71,7 @@ _select prop vals = do
 -- GHCi> _where (startsWith 'J' . firstName) (_select studentName students)
 -- [Judith Butler,Jean Baudrillard,Julia Kristeva]
 --
-_where :: (a -> Bool) -> [a] -> [a]
+_where :: (Monad m, Alternative m) => (a -> Bool) -> m a -> m a
 _where test vals = do
   val <- vals
   guard (test val)
@@ -105,7 +106,7 @@ courses = [Course 101 "French" 100, Course 201 "English" 200]
 -- GHCi>  _join teachers courses teacherId teacher
 -- [(Teacher {teacherId = 100, teacherName = Simone De Beauvior},Course {courseId = 101, courseTitle = "French", teacher = 100}),(Teacher {teacherId = 200, teacherName = Susan Sontag},Course {courseId = 201, courseTitle = "English", teacher = 200})]
 --
-_join :: Eq c => [a] -> [b] -> (a -> c) -> (b -> c) -> [(a, b)]
+_join :: (Monad m, Alternative m, Eq c) => m a -> m b -> (a -> c) -> (b -> c) -> m (a, b)
 _join data1 data2 prop1 prop2 = do
   d1 <- data1
   d2 <- data2
@@ -135,6 +136,117 @@ finalResult =
 teacherFirstName :: [String]
 teacherFirstName = _hinq (_select firstName) finalResult (_where (\_ -> True))
 
--- 33.5. MAKING A HINQ TYPE FOR YOUR QUERIES から
+-- MAKING A HINQ TYPE FOR YOUR QUERIES
+data HINQ m a b
+  = HINQ (m a -> m b) (m a) (m a -> m a)
+  | HINQ_ (m a -> m b) (m a)
 
+runHINQ :: (Monad m, Alternative m) => HINQ m a b -> m b
+runHINQ (HINQ sClause jClause wClause) = _hinq sClause jClause wClause
+runHINQ (HINQ_ sClause jClause) = _hinq sClause jClause (_where (\_ -> True))
 
+--
+-- GHCi> runHINQ query1
+-- [Susan Sontag]
+--
+query1 :: HINQ [] (Teacher, Course) Name
+query1 =
+  HINQ
+    (_select (teacherName . fst))
+    (_join teachers courses teacherId teacher)
+    (_where ((== "English") . courseTitle . snd))
+
+--
+-- GHCi> runHINQ query2
+-- [Simone De Beauvior,Susan Sontag]
+--
+query2 :: HINQ [] Teacher Name
+query2 = HINQ_ (_select teacherName) teachers
+
+-- Using HINQ with Maybe types
+possibleTeacher :: Maybe Teacher
+possibleTeacher = Just (head teachers)
+
+possibleCourse :: Maybe Course
+possibleCourse = Just (head courses)
+
+--
+-- GHCi> runHINQ maybeQuery1
+-- Just Simone De Beauvior
+--
+maybeQuery1 :: HINQ Maybe (Teacher, Course) Name
+maybeQuery1 =
+  HINQ
+    (_select (teacherName . fst))
+    (_join possibleTeacher possibleCourse teacherId teacher)
+    (_where ((== "French") . courseTitle . snd))
+
+missingCourse :: Maybe Course
+missingCourse = Nothing
+
+--
+-- GHCi> runHINQ maybeQuery2
+-- Nothing
+--
+maybeQuery2 :: HINQ Maybe (Teacher, Course) Name
+maybeQuery2 =
+  HINQ
+    (_select (teacherName . fst))
+    (_join possibleTeacher missingCourse teacherId teacher)
+    (_where ((== "French") . courseTitle . snd))
+
+-- Joining multiple lists to get all enrollments
+data Enrollment =
+  Enrollment
+    { student :: Int
+    , course  :: Int
+    }
+  deriving (Show)
+
+enrollments :: [Enrollment]
+enrollments =
+  [ (Enrollment 1 101)
+  , (Enrollment 2 101)
+  , (Enrollment 2 201)
+  , (Enrollment 3 101)
+  , (Enrollment 4 201)
+  , (Enrollment 4 101)
+  , (Enrollment 5 101)
+  , (Enrollment 6 201)
+  ]
+
+studentEnrollmentsQ =
+  HINQ_ (_select (\(st, en) -> (studentName st, course en))) (_join students enrollments studentId student)
+
+--
+-- GHCi> studentEnrollments
+-- [(Audre Lorde,101),(Leslie Silko,101),(Leslie Silko,201),(Judith Butler,101),(Guy Debord,201),(Guy Debord,101),(Jean Baudrillard,101),(Julia Kristeva,201)]
+--
+studentEnrollments :: [(Name, Int)]
+studentEnrollments = runHINQ studentEnrollmentsQ
+
+englishStudentsQ =
+  HINQ
+    (_select (fst . fst))
+    (_join studentEnrollments courses snd courseId)
+    (_where ((== "English") . courseTitle . snd))
+
+--
+-- GHCi> englishStudents
+-- [Leslie Silko,Guy Debord,Julia Kristeva]
+--
+englishStudents :: [Name]
+englishStudents = runHINQ englishStudentsQ
+
+--
+-- GHCi> getEnrollments "English"
+-- [Leslie Silko,Guy Debord,Julia Kristeva]
+--
+getEnrollments :: String -> [Name]
+getEnrollments courseName = runHINQ courseQuery
+  where
+    courseQuery =
+      HINQ
+        (_select (fst . fst))
+        (_join studentEnrollments courses snd courseId)
+        (_where ((== courseName) . courseTitle . snd))
