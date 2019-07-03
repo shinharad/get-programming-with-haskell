@@ -1,6 +1,6 @@
 module Main where
 
-import Lib
+import           Lib
 
 helloPerson :: String -> String
 helloPerson name = "Hello" ++ " " ++ name ++ "!"
@@ -11,4 +11,3 @@ main = do
   name <- getLine
   let statement = helloPerson name
   putStrLn statement
-

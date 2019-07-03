@@ -1,6 +1,6 @@
 # get-programming-with-haskell
 
-Learning the [Get Programming with Haskell](https://www.manning.com/books/get-programming-with-haskell).
+Learning the "[Get Programming with Haskell](https://www.manning.com/books/get-programming-with-haskell)".
 
 - Unit 1. Foundations of functional programming
 - Unit 2. Introducing types
