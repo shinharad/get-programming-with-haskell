@@ -7,6 +7,7 @@ import qualified Data.ByteString.Char8      as BC
 import qualified Data.ByteString.Lazy       as L
 import qualified Data.ByteString.Lazy.Char8 as LC
 import           Network.HTTP.Simple
+import           Control.Monad.IO.Class
 
 import           Lib
 
@@ -46,3 +47,10 @@ main = do
     else print "request failed with error"
 
 
+response :: MonadIO m => m (Response LC.ByteString)
+response = httpLBS "http://news.ycombinator.com"
+
+main' :: IO ()
+main' = do
+  response <- httpLBS "http://news.ycombinator.com"
+  print $ getResponseHeader "Server" response
