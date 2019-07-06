@@ -36,4 +36,3 @@ primeFactors n
   | otherwise = Just (unsafePrimeFactors n primesLessThanN)
   where
     primesLessThanN = filter (<= n) primes
-
