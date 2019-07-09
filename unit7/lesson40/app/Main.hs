@@ -1,95 +1,77 @@
 module Main where
 
+import           Control.Monad
 import           Data.Aeson
 import           Data.ByteString.Lazy       as B
 import           Data.ByteString.Lazy.Char8 as BC
 import           Data.Text                  as T
 import           GHC.Generics
 
-main :: IO ()
-main = print "hi"
-
-data Book =
-  Book
-    { title  :: T.Text
-    , author :: T.Text
-    , year   :: Int
-    }
-  deriving (Show, Generic)
-
-instance FromJSON Book
-
-instance ToJSON Book
-
-myBook :: Book
-myBook = Book {author = "Will Kurt", title = "Learn Haskell", year = 2017}
-
-myBookJSON :: BC.ByteString
-myBookJSON = encode myBook
-
-wrongJSON :: BC.ByteString
-wrongJSON = "{\"writer\":\"Emil Cioran\",\"title\":\"A Short History of Decay\",\"year\"=1949}"
-
-bookFromWrongJSON :: Maybe Book
-bookFromWrongJSON = decode wrongJSON
-
---
--- GHCi> eitherDecode collectJSON :: Either String Book
--- Right (Book {title = "Learn Haskell", author = "Will Kurt", year = 2017})
---
-collectJSON :: BC.ByteString
-collectJSON = "{\"year\":2017,\"author\":\"Will Kurt\",\"title\":\"Learn Haskell\"}"
-
--- Writing your own instances of FromJSON and ToJSON
-sampleError :: BC.ByteString
-sampleError = "{\"message\":\"oops!\",\"error\": 123}"
-
--- "error"というプロパティが予約語とかぶる場合
-data ErrorMessage =
-  ErrorMessage
-    { message :: T.Text
-    , error   :: Int
+data NOAAResult =
+  NOAAResult
+    { uid          :: T.Text
+    , mindate      :: T.Text
+    , maxdate      :: T.Text
+    , name         :: T.Text
+    , datacoverage :: Float
+--    , datacoverage :: Int
+    , resultId     :: T.Text
     }
   deriving (Show)
 
---
--- This operator takes an Object (your JSON object) and some text and returns a value parsed into a context.
--- For example, this line of code is trying to parse the message field from your JSON object:
---   v .: "message"
---
--- GHCi> :t (.:)
--- (.:)
---   :: FromJSON a =>
---      Object -> Text -> aeson-1.4.2.0:Data.Aeson.Types.Internal.Parser a
---
-instance FromJSON ErrorMessage where
-  parseJSON (Object v) = ErrorMessage <$> v .: "message" <*> v .: "error"
+instance FromJSON NOAAResult where
+  parseJSON (Object v) =
+    NOAAResult <$> v .: "uid"
+               <*> v .: "mindate"
+               <*> v .: "maxdate"
+               <*> v .: "name"
+               <*> v .: "datacoverage"
+               <*> v .: "id"
 
-instance ToJSON ErrorMessage where
-  toJSON (ErrorMessage message errorCode) = object ["message" .= message, "error" .= errorCode]
+data Resultset =
+  Resultset
+    { offset :: Int
+    , count  :: Int
+    , limit  :: Int
+    }
+  deriving (Show, Generic)
 
---
--- GHCi> ErrorMessage <$> exampleMessage <*> exampleError
--- Just (ErrorMessage {message = "Opps", error = 123})
-exampleMessage :: Maybe T.Text
-exampleMessage = Just "Opps"
+instance FromJSON Resultset
 
-exampleError :: Maybe Int
-exampleError = Just 123
+data Metadata =
+  Metadata
+    { resultset :: Resultset
+    }
+  deriving (Show, Generic)
 
-sampleErrorMessage :: Maybe ErrorMessage
-sampleErrorMessage = decode sampleError
+instance FromJSON Metadata
 
---
--- GHCi> encode anErrorMessage
--- "{\"error\":0,\"message\":\"Everything is Okay\"}"
---
--- GHCi> eitherDecode "{\"error\":0,\"message\":\"Everything is Okay\"}" :: Either String ErrorMessage
--- Right (ErrorMessage {message = "Everything is Okay", error = 0})
---
-anErrorMessage :: ErrorMessage
-anErrorMessage = ErrorMessage "Everything is Okay" 0
+data NOAAResponse =
+  NOAAResponse
+    { metadata :: Metadata
+    , results  :: [NOAAResult]
+    }
+  deriving (Show, Generic)
 
--- 40.4. PUTTING IT ALL TOGETHER: READING YOUR NOAA DATA から
+instance FromJSON NOAAResponse
+
+printResults :: Maybe [NOAAResult] -> IO ()
+printResults Nothing = print "error loading data"
+printResults (Just results) = do
+  forM_ results (print . name)
+-- 本の間違い
+--    print dataName
+
+printResults' :: Either String [NOAAResult] -> IO ()
+printResults' (Left error) = print error
+printResults' (Right results) = forM_ results (print . name)
+
+main :: IO ()
+main = do
+  jsonData <- B.readFile "data.json"
+  let noaaResponse = eitherDecode jsonData :: Either String NOAAResponse
+--  let noaaResponse = decode jsonData :: Maybe NOAAResponse
+  let noaaResults = results <$> noaaResponse
+  printResults' noaaResults
 
 
