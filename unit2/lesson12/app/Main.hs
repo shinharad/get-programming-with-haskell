@@ -1,8 +1,7 @@
 module Main where
 
 main :: IO ()
-main = do
-  putStrLn "hello world"
+main = return ()
 
 patientInfo :: String -> String -> Int -> Int -> String
 patientInfo fname lname age height = name ++ " " ++ ageHeight
@@ -10,6 +9,13 @@ patientInfo fname lname age height = name ++ " " ++ ageHeight
     name = lname ++ ", " ++ fname
     ageHeight = "(" ++ show age ++ "yrs. " ++ show height ++ "in.)"
 
+main1 = do
+  print $ patientInfo "John" "Doe" 43 74
+    -- "Doe, John (43yrs. 74in.)"
+  print $ patientInfo "Jane" "Smith" 25 62
+    -- "Smith, Jane (25yrs. 62in.)"
+
+-- ----------------------------------------------
 type FirstName = String
 
 type LastName = String
@@ -38,6 +44,7 @@ patientInfo3 (fname, lname) age height = name ++ " " ++ ageHeight
     name = lname ++ ", " ++ fname
     ageHeight = "(" ++ show age ++ "yrs. " ++ show height ++ "in.)"
 
+-- ----------------------------------------------
 data Sex
   = Male
   | Female
@@ -46,6 +53,7 @@ sexInitial :: Sex -> Char
 sexInitial Male   = 'M'
 sexInitial Female = 'F'
 
+-- ----------------------------------------------
 data RhType
   = Pos
   | Neg
@@ -88,6 +96,14 @@ canDonateTo (BloodType A _) (BloodType A _) = True
 canDonateTo (BloodType B _) (BloodType B _) = True
 canDonateTo _ _                             = False
 
+main2 = do
+  print $ canDonateTo patient1BT patient2BT -- False
+  print $ canDonateTo patient2BT patient1BT -- True
+  print $ canDonateTo patient2BT patient3BT -- True
+  print $ canDonateTo patient1BT patient3BT -- True
+  print $ canDonateTo patient3BT patient1BT -- False
+
+-- ----------------------------------------------
 type MiddleName = String
 
 data Name
@@ -115,3 +131,7 @@ data Patient =
 jackieSmith :: Patient
 jackieSmith =
   Patient {name = Name "Jackie" "Smith", age = 43, sex = Female, height = 62, weight = 115, bloodType = BloodType O Neg}
+
+main3 = do
+  print $ height jackieSmith -- 62
+  print $ showBloodType (bloodType jackieSmith) -- "O-"

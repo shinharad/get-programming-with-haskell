@@ -1,8 +1,7 @@
 module Main where
 
 main :: IO ()
-main = do
-  putStrLn "hello world"
+main = return ()
 
 addThenDouble :: Num a => a -> a -> a
 addThenDouble x y = (x + y) * 2
@@ -14,3 +13,8 @@ inc x = x + 1
 
 inc' :: Num a => a -> a
 inc' x = x + 1
+
+main1 = do
+  print $ Vanilla == Vanilla -- True
+  print $ Chocolate == Vanilla -- False
+  print $ Chocolate /= Vanilla -- True

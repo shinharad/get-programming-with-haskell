@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 259655f4befaa51639f6dbf2f98b669f13f381524f0fe7a84325a8395cebea8c
+-- hash: 11ddbf900e709ff62da25e62aa8123c9d830cfd243e6c88d335d0ed92288b4aa
 
 name:           lesson15
 version:        0.1.0.0
@@ -26,8 +26,6 @@ source-repository head
   location: https://github.com/githubuser/lesson15
 
 library
-  exposed-modules:
-      Lib
   other-modules:
       Paths_lesson15
   hs-source-dirs:
