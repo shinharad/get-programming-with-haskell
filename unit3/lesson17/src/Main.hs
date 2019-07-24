@@ -3,8 +3,7 @@ module Main where
 import           Data.List
 
 main :: IO ()
-main = do
-  putStrLn "hello world"
+main = return ()
 
 myLast :: [a] -> a
 myLast = head . reverse
@@ -45,10 +44,22 @@ instance Semigroup Color where
     | all (`elem` [Blue, Yellow, Green]) [a, b] = Green
     | all (`elem` [Red, Yellow, Orange]) [a, b] = Orange
     | otherwise = Brown
-  -- (<>) a b = if a == b
-  --            then a
-  --            else Brown
 
+main1 = do
+  print $ Red <> Yellow
+    -- Orange
+  print $ Red <> Blue
+    -- Purple
+  print $ Green <> Purple
+    -- Brown
+
+main2 = do
+  print $ (Green <> Blue) <> Yellow
+    -- Green
+  print $ Green <> (Blue <> Yellow)
+    -- Green
+
+-- ----------------------------------------------
 --  17.3. COMPOSING WITH IDENTITY: MONOIDS
 -- 17.3.3. Practical Monoids—building probability tables
 type Events = [String]
@@ -72,6 +83,11 @@ instance Show PTable where
     where
       pairs = zipWith showPair events probs
 
+main3 = print $ createPTable ["heads", "tails"] [0.5, 0.5]
+  -- heads|0.5
+  -- tails|0.5
+
+-- ----------------------------------------------
 -- The cartCombine function for the Cartesian product of lists
 cartCombine :: (a -> b -> c) -> [a] -> [b] -> [c]
 cartCombine func l1 l2 = zipWith func newL1 cycledL2
@@ -106,3 +122,21 @@ coin = createPTable ["heads", "tails"] [0.5, 0.5]
 
 spinner :: PTable
 spinner = createPTable ["red", "blue", "green"] [0.1, 0.2, 0.7]
+
+main4 = print $ coin <> spinner
+  -- heads-red|5.0e-2
+  -- heads-blue|0.1
+  -- heads-green|0.35
+  -- tails-red|5.0e-2
+  -- tails-blue|0.1
+  -- tails-green|0.35
+
+main5 = print $ mconcat [coin, coin, coin]
+  -- heads-heads-heads|0.125
+  -- heads-heads-tails|0.125
+  -- heads-tails-heads|0.125
+  -- heads-tails-tails|0.125
+  -- tails-heads-heads|0.125
+  -- tails-heads-tails|0.125
+  -- tails-tails-heads|0.125
+  -- tails-tails-tails|0.125

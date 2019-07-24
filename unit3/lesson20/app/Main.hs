@@ -1,14 +1,12 @@
 module Main where
 
-import           Lib
-
 import           Data.List
 import qualified Data.Map       as Map
 import           Data.Maybe
 import           Data.Semigroup
 
 main :: IO ()
-main = someFunc
+main = return ()
 
 file1 :: [(Int, Double)]
 file1 = [(1, 200.1), (2, 199.5), (3, 199.4), (4, 198.9), (5, 199.0), (6, 200.2), (9, 200.3), (10, 201.2), (12, 202.9)]
@@ -63,6 +61,21 @@ instance Show a => Show (TS a) where
     where
       rows = zipWith showTVPair times values
 
+main1 = print $ fileToTS file1
+  -- 1|200.1
+  -- 2|199.5
+  -- 3|199.4
+  -- 4|198.9
+  -- 5|199.0
+  -- 6|200.2
+  -- 7|NA
+  -- 8|NA
+  -- 9|200.3
+  -- 10|201.2
+  -- 11|NA
+  -- 12|202.9
+
+-- ----------------------------------------------
 -- Converting all your data files into TS types
 ts1 :: TS Double
 ts1 = fileToTS file1
@@ -96,13 +109,57 @@ combineTS (TS t1 v1) (TS t2 v2) = TS completeTimes combinedValues
 instance Semigroup (TS a) where
   (<>) = combineTS
 
--- ts1 <> ts2
+main2 = print $ ts1 <> ts2
+  -- 1|200.1
+  -- 2|199.5
+  -- 3|199.4
+  -- 4|198.9
+  -- 5|199.0
+  -- 6|200.2
+  -- 7|NA
+  -- 8|NA
+  -- 9|200.3
+  -- 10|201.2
+  -- 11|201.6
+  -- 12|201.5
+  -- 13|201.5
+  -- 14|203.5
+  -- 15|204.9
+  -- 16|207.1
+  -- 17|NA
+  -- 18|210.5
+  -- 19|NA
+  -- 20|208.8
+
+-- ----------------------------------------------
 -- Making TS an instance of Monoid
 instance Monoid (TS a) where
   mempty = TS [] []
   mappend = (<>)
 
--- mconcat [ts1, ts2]
+main3 = print $ mconcat [ts1, ts2]
+  -- 1|200.1
+  -- 2|199.5
+  -- 3|199.4
+  -- 4|198.9
+  -- 5|199.0
+  -- 6|200.2
+  -- 7|NA
+  -- 8|NA
+  -- 9|200.3
+  -- 10|201.2
+  -- 11|201.6
+  -- 12|201.5
+  -- 13|201.5
+  -- 14|203.5
+  -- 15|204.9
+  -- 16|207.1
+  -- 17|NA
+  -- 18|210.5
+  -- 19|NA
+  -- 20|208.8
+
+-- ----------------------------------------------
 tsAll :: TS Double
 tsAll = mconcat [ts1, ts2, ts3, ts4]
 
@@ -125,6 +182,10 @@ meanTS (TS times values) =
     cleanVals = map fromJust justVals
     avg = mean cleanVals
 
+main4 = print $ meanTS tsAll
+  -- Just 210.5966666666667
+
+-- ----------------------------------------------
 -- Listing 20.15. makeTSCompare and useful type synonyms
 type CompareFunc a = a -> a -> a
 
@@ -141,7 +202,10 @@ makeTSCompare func = newFunc
         then (i1, Just val1)
         else (i2, Just val2)
 
--- makeTSCompare max (3, Just 200) (4, Just 10)
+main5 = print $ makeTSCompare max (3, Just 200) (4, Just 10)
+  -- (3,Just 200)
+
+-- ----------------------------------------------
 -- Listing 20.16. compareTS, a generic means of applying comparison functions to TS
 compareTS :: Eq a => (a -> a -> a) -> TS a -> Maybe (Int, Maybe a)
 compareTS func (TS [] []) = Nothing
@@ -160,8 +224,13 @@ minTS = compareTS min
 maxTS :: Ord a => TS a -> Maybe (Int, Maybe a)
 maxTS = compareTS max
 
--- minTS tsAll
--- maxTS tsAll
+main6 = do
+  print $ minTS tsAll
+    -- Just (4,Just 198.9)
+  print $ maxTS tsAll
+   -- Just (28,Just 223.8)
+
+-- ----------------------------------------------
 -- 20.4. TRANSFORMING TIME SERIES
 diffPair :: Num a => Maybe a -> Maybe a -> Maybe a
 diffPair Nothing _         = Nothing
@@ -176,6 +245,10 @@ diffTS (TS times values) = TS times (Nothing : diffValues)
     shiftValues = tail values
     diffValues = zipWith diffPair shiftValues values -- valuesの末尾が欠落？
 
+main7 = print $ meanTS (diffTS tsAll)
+  -- Just 0.6076923076923071
+
+-- ----------------------------------------------
 --movingAverageTS :: (Real a) => TS a -> Int -> TS Double
 meanMaybe :: (Real a) => [Maybe a] -> Maybe Double
 meanMaybe vals =

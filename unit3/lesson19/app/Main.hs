@@ -3,8 +3,7 @@ module Main where
 import qualified Data.Map as Map
 
 main :: IO ()
-main = do
-  putStrLn "hello world"
+main = return ()
 
 data Organ
   = Heart
@@ -22,11 +21,13 @@ ids = [2, 7, 13, 14, 21, 24]
 organPairs :: [(Int, Organ)]
 organPairs = zip ids organs
 
--- *Main> Map.lookup 2 organCatalog
--- Just Heart
 organCatalog :: Map.Map Int Organ
 organCatalog = Map.fromList organPairs
 
+main1 = print $ Map.lookup 2 organCatalog
+  -- Just Heart
+
+-- ----------------------------------------------
 possibleDrawers :: [Int]
 possibleDrawers = [1 .. 50]
 
@@ -40,4 +41,9 @@ availableOrgans = getDrawerContents possibleDrawers organCatalog
 
 countOrgan :: Organ -> [Maybe Organ] -> Int
 countOrgan organ available = length (filter (\x -> x == Just organ) available)
--- 19.3. COMPUTING WITH MAYBE から
+
+main2 = do
+  print $ countOrgan Brain availableOrgans
+    -- 1
+  print $ countOrgan Heart availableOrgans
+    -- 2

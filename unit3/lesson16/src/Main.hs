@@ -1,9 +1,9 @@
 module Main where
 
 main :: IO ()
-main = do
-  putStrLn "hello world"
+main = return ()
 
+-- 16.2. SUM TYPES—COMBINING TYPES WITH “OR”
 type FirstName = String
 
 type LastName = String
